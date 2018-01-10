@@ -456,7 +456,6 @@ public class ThinClientExample2 {
         System.out.println("OP_CACHE_CREATE_WITH_NAME");
 
 //        String cacheName = "myNewCache";
-//
 //        int nameLength = cacheName.getBytes("UTF-8").length;
 
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -470,7 +469,6 @@ public class ThinClientExample2 {
         // Request id (can be anything)
         long reqId = 1;
         writeLongLittleEndian(reqId, out);
-
 
         // String cache name
 //        writeByteLittleEndian(9, out); // String type code
