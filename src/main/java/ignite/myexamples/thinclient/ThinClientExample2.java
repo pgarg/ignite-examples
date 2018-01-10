@@ -24,25 +24,25 @@ public class ThinClientExample2 {
     private static final String cacheName = "myCache";
 
     public static void main(String[] args) throws IOException, IgniteCheckedException {
-//        Ignition.setClientMode(true);
-//
-//        try (Ignite ignite = Ignition.start("/Users/prachig/myexamples/config/cluster-config.xml")) {
-//            IgniteCache<Long, Person> cache = ignite.getOrCreateCache("personCache");
-//
-//            cache.query(new SqlFieldsQuery("INSERT INTO Person(_key, id, name, " +
-//                    "salary) values (1, 1, 'John', '1000'), (2, 2, 'Mary', '2000')"));
-//
-//            QueryCursor<List<?>> cursor = cache.query(new SqlQuery( "Person",
-//                    "select * from Person"));
-//
-//            System.out.println(cursor.getAll());
-//        }
+        Ignition.setClientMode(true);
+
+        try (Ignite ignite = Ignition.start("/Users/prachig/myexamples/config/cluster-config.xml")) {
+            IgniteCache<Long, Person> cache = ignite.getOrCreateCache("personCache");
+
+            cache.query(new SqlFieldsQuery("INSERT INTO Person(_key, id, name, " +
+                    "salary) values (1, 1, 'John', '1000'), (2, 2, 'Mary', '2000')"));
+
+            QueryCursor<List<?>> cursor = cache.query(new SqlQuery( "Person",
+                    "select * from Person"));
+
+            System.out.println(cursor.getAll());
+        }
 
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress("127.0.0.1", 10900));
         doHandshake(socket);
         //createCacheWithConfiguration(socket);
-        doQueryScan(socket);
+        querySqlFields(socket);
     }
 
     private static void putBinaryType(Socket socket) throws  IOException {
@@ -308,7 +308,7 @@ public class ThinClientExample2 {
         String sql = "Select id, salary from Person";
         int sqlLength = sql.getBytes("UTF-8").length;
 
-        String sqlSchema = "PUBLIC";
+        String sqlSchema = "personCache";
         int sqlSchemaLength = sqlSchema.getBytes("UTF-8").length;
 
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
