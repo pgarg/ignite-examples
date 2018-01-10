@@ -1,0 +1,166 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">-->
+    <!--<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">-->
+        <!--<property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+        <!--<property name="url" value="jdbc:mysql://localhost:3306/test"/>-->
+        <!--<property name="username" value="root"/>-->
+        <!--<property name="password" value=""/>-->
+    <!--</bean>-->
+
+     <!--Security credentials. -->
+    <!--<bean id="securityCredentials" class="org.apache.ignite.plugin.security.SecurityCredentials">-->
+        <!--<constructor-arg value="MY_USERNAME"/>-->
+        <!--<constructor-arg value="MY_PASSWORD"/>-->
+    <!--</bean>-->
+
+    <!--<bean id="securityCredentialsProvider" class="ignite.myexamples.security.MySecurityCredentialsProvider">-->
+        <!--<constructor-arg ref="securityCredentials"/>-->
+    <!--</bean>-->
+
+    <bean id="ignite.cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
+
+        <property name="clientConnectorConfiguration">
+            <bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
+                <property name="host" value="127.0.0.1"/>
+                <property name="port" value="10900"/>
+                <property name="portRange" value="30"/>
+            </bean>
+        </property>
+
+        <!--<property name="pluginConfigurations">-->
+            <!--<bean class="ignite.myexamples.plugin.MyPluginConfiguration">-->
+                <!--&lt;!&ndash;<constructor-arg ref="securityCredentialsProvider"/>&ndash;&gt;-->
+            <!--</bean>-->
+        <!--</property>-->
+
+        <!--<property name="persistentStoreConfiguration">-->
+        <!--<bean class="org.apache.ignite.configuration.PersistentStoreConfiguration">-->
+        <!--<property name="walMode" value="LOG_ONLY" />-->
+        <!--</bean>-->
+        <!--</property>-->
+
+        <!--<property name="gridLogger">-->
+            <!--<bean class="org.apache.ignite.logger.log4j2.Log4J2Logger">-->
+                <!--<constructor-arg type="java.lang.String" value="/Users/prachig/myexamples/config/ignite-log4j2.xml"/>-->
+            <!--</bean>-->
+        <!--</property>-->
+
+        <!--<property name="gridLogger">-->
+            <!--<bean class="org.apache.ignite.logger.log4j.Log4JLogger">-->
+                <!--<constructor-arg type="java.lang.String" value="/Users/prachig/myexamples/config/ignite-log4j.xml"/>-->
+            <!--</bean>-->
+        <!--</property>-->
+
+        <!--<property name="gridLogger">-->
+            <!--<bean class="org.apache.ignite.logger.jcl.JclLogger">-->
+                <!--<constructor-arg type="org.apache.commons.logging.Log">-->
+                    <!--<bean class="org.apache.commons.logging.impl.Log4JLogger">-->
+                        <!--<constructor-arg type="java.lang.String" value="/Users/prachig/myexamples/config/ignite-log4j.xml"/>-->
+                    <!--</bean>-->
+                <!--</constructor-arg>-->
+            <!--</bean>-->
+        <!--</property>-->
+
+        <!--<property name="gridLogger">-->
+            <!--<bean class="org.apache.ignite.logger.slf4j.Slf4jLogger"/>-->
+        <!--</property>-->
+
+        <property name="cacheConfiguration">
+            <list>
+                <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                    <property name="name" value="personCache"/>
+                    <property name="atomicityMode" value="ATOMIC"/>
+                    <property name="cacheMode" value="REPLICATED" />
+                    <property name="backups" value="1"/>
+                    <!--<property name="readThrough" value="true"/>-->
+                    <!--<property name="writeThrough"  value="true"/>-->
+
+                    <!--<property name="cacheStoreFactory">-->
+                        <!--<bean class="javax.cache.configuration.FactoryBuilder" factory-method="factoryOf">-->
+                            <!--<constructor-arg value="ignite.myexamples.store.PersonStore"/>-->
+                        <!--</bean>-->
+                    <!--</property>-->
+
+                    <property name="queryEntities">
+                        <list>
+                            <bean class="org.apache.ignite.cache.QueryEntity">
+                                <property name="keyType" value="java.lang.Long"/>
+                                <property name="valueType" value="ignite.myexamples.model.Person"/>
+                                <property name="fields">
+                                    <map>
+                                        <entry key="id" value="java.lang.Long"/>
+                                        <entry key="name" value="java.lang.String"/>
+                                        <entry key="salary" value="java.lang.Integer"/>
+                                    </map>
+                                </property>
+                                <property name="indexes">
+                                    <list>
+                                        <!-- Single field (aka. column) index -->
+                                        <bean class="org.apache.ignite.cache.QueryIndex">
+                                            <constructor-arg value="id"/>
+                                        </bean>
+                                        <bean class="org.apache.ignite.cache.QueryIndex">
+                                            <constructor-arg value="salary"/>
+                                        </bean>
+                                    </list>
+                                </property>
+                            </bean>
+                        </list>
+                    </property>
+                </bean>
+
+                <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                    <property name="name" value="myCache"/>
+                    <property name="atomicityMode" value="TRANSACTIONAL"/>
+                    <property name="cacheMode" value="PARTITIONED" />
+                    <property name="backups" value="1"/>
+                </bean>
+            </list>
+        </property>
+
+        <!--<property name="cacheStoreSessionListenerFactories">-->
+            <!--<list>-->
+                <!--<bean class="javax.cache.configuration.FactoryBuilder.SingletonFactory">-->
+                    <!--<constructor-arg>-->
+                        <!--<bean class="org.apache.ignite.cache.store.jdbc.CacheJdbcStoreSessionListener">-->
+                            <!--&lt;!&ndash; Inject external data source. &ndash;&gt;-->
+                            <!--<property name="dataSource" ref="dataSource"/>-->
+                        <!--</bean>-->
+                    <!--</constructor-arg>-->
+                <!--</bean>-->
+            <!--</list>-->
+        <!--</property>-->
+
+        <property name="localHost" value="127.0.0.1"/>
+
+        <property name="peerClassLoadingEnabled" value="true"/>
+
+        <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
+        <property name="discoverySpi">
+            <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+                <property name="ipFinder">
+                    <!--
+                        Ignite provides several options for automatic discovery that can be used
+                        instead os static IP based discovery. For information on all options refer
+                        to our documentation: http://apacheignite.readme.io/docs/cluster-config
+                    -->
+                    <!-- Uncomment static IP finder to enable static-based discovery of initial nodes. -->
+                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">
+                    <!--<bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder">-->
+                        <property name="addresses">
+                            <list>
+                                <!-- In distributed environment, replace with actual host IP address. -->
+                                <value>127.0.0.1:47500..47509</value>
+                            </list>
+                        </property>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+    </bean>
+</beans>

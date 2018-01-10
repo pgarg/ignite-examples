@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="ignite-log4j">
+    <CLASSES>
+      <root url="file://$USER_HOME$/Downloads/apache-ignite-fabric-2.3.0-SNAPSHOT-bin/libs/optional/ignite-log4j" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$USER_HOME$/Downloads/apache-ignite-fabric-2.3.0-SNAPSHOT-bin/libs/optional/ignite-log4j" recursive="false" />
+  </library>
+</component>

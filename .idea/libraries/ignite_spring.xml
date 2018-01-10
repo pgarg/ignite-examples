@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="ignite-spring">
+    <CLASSES>
+      <root url="file://$USER_HOME$/Downloads/apache-ignite-fabric-2.3.0-SNAPSHOT-bin/libs/ignite-spring" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$USER_HOME$/Downloads/apache-ignite-fabric-2.3.0-SNAPSHOT-bin/libs/ignite-spring" recursive="false" />
+  </library>
+</component>

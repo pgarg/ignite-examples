@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="ignite-rest-http">
+    <CLASSES>
+      <root url="file://$USER_HOME$/Downloads/apache-ignite-fabric-2.3.0-SNAPSHOT-bin/libs/optional/ignite-rest-http" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$USER_HOME$/Downloads/apache-ignite-fabric-2.3.0-SNAPSHOT-bin/libs/optional/ignite-rest-http" recursive="false" />
+  </library>
+</component>
