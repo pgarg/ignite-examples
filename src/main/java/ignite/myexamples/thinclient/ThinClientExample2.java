@@ -514,8 +514,6 @@ public class ThinClientExample2 {
             String s = new String(buf); // cache name
 
             System.out.println(s);
-
-
         }
     }
 
