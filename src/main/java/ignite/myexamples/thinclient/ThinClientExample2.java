@@ -122,7 +122,6 @@ public class ThinClientExample2 {
         writeIntLittleEndian(field3.hashCode(), out);
 
 
-
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
@@ -151,7 +150,6 @@ public class ThinClientExample2 {
         String s = new String(buf);
 
         System.out.println(s);
-
     }
 
     private static void createCacheWithConfiguration(Socket socket) throws IOException {
@@ -177,7 +175,6 @@ public class ThinClientExample2 {
 
         // CacheMode
         writeIntLittleEndian(2, out);
-
 
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
