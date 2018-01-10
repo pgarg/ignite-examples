@@ -41,7 +41,8 @@ public class ThinClientExample2 {
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress("127.0.0.1", 10900));
         doHandshake(socket);
-        doSQLQuery(socket);
+        createCacheWithName(socket);
+        getCacheNames(socket);
 
     }
 
@@ -275,10 +276,13 @@ public class ThinClientExample2 {
         // Read entries (as user objects)
         for (int i = 0; i < rowCount; i++) {
             int resTypeCode1 = readByteLittleEndian(in);
+            System.out.println(resTypeCode1);
             System.out.println(readLongLittleEndian(in));
 
             int resTypeCode2 = readByteLittleEndian(in);
             System.out.println(resTypeCode2);
+
+            // read value
         }
 
         boolean moreResults = readBooleanLittleEndian(in);
@@ -449,11 +453,8 @@ public class ThinClientExample2 {
         System.out.println("moreResults: " + moreResults);
     }
 
-    private static void cacheOperation(Socket socket) throws IOException {
-        System.out.println("OP_CACHE_CREATE_WITH_NAME");
-
-//        String cacheName = "myNewCache";
-//        int nameLength = cacheName.getBytes("UTF-8").length;
+    private static void getCacheNames(Socket socket) throws IOException {
+        System.out.println("OP_CACHE_GET_NAMES");
 
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
@@ -466,11 +467,6 @@ public class ThinClientExample2 {
         // Request id (can be anything)
         long reqId = 1;
         writeLongLittleEndian(reqId, out);
-
-        // String cache name
-//        writeByteLittleEndian(9, out); // String type code
-//        writeIntLittleEndian(nameLength, out); // String length
-//        out.writeBytes(cacheName);
 
         // Send request
         out.flush();
@@ -511,6 +507,45 @@ public class ThinClientExample2 {
             System.out.println(s);
         }
     }
+
+    private static void createCacheWithName(Socket socket) throws IOException {
+        String cacheName = "myNewCache";
+
+        int nameLength = cacheName.getBytes("UTF-8").length;
+
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+        // Message length
+        writeIntLittleEndian(15 + nameLength, out);
+
+        // Op code = OP_CACHE_CREATE_WITH_NAME
+        writeShortLittleEndian(1051, out);
+
+        // Request id (can be anything)
+        long reqId = 1;
+        writeLongLittleEndian(reqId, out);
+
+        // Cache name
+        writeByteLittleEndian(9, out); // String type code
+        writeIntLittleEndian(nameLength, out); // Cache name length
+        out.writeBytes(cacheName);
+
+        // Send request
+        out.flush();
+
+        // Read result
+        DataInputStream in = new DataInputStream(socket.getInputStream());
+
+        // Response length
+        final int len = readIntLittleEndian(in);
+
+        // Request id
+        long resReqId = readLongLittleEndian(in);
+
+        // Success code
+        int statusCode = readIntLittleEndian(in);
+    }
+
 
     private static void cacheContainsKeys(Socket socket, int[] key) throws IOException{
         System.out.println("cacheContainsKey");
