@@ -24,26 +24,25 @@ public class ThinClientExample2 {
     private static final String cacheName = "myCache";
 
     public static void main(String[] args) throws IOException, IgniteCheckedException {
-        Ignition.setClientMode(true);
-
-        try (Ignite ignite = Ignition.start("/Users/prachig/myexamples/config/cluster-config.xml")) {
-            IgniteCache<Long, Person> cache = ignite.getOrCreateCache("personCache");
-
-            cache.query(new SqlFieldsQuery("INSERT INTO Person(_key, id, name, " +
-                    "salary) values (1, 1, 'John', '1000'), (2, 2, 'Mary', '2000')"));
-
-            QueryCursor<List<?>> cursor = cache.query(new SqlQuery( "Person",
-                    "select * from Person"));
-
-            System.out.println(cursor.getAll());
-        }
+//        Ignition.setClientMode(true);
+//
+//        try (Ignite ignite = Ignition.start("/Users/prachig/myexamples/config/cluster-config.xml")) {
+//            IgniteCache<Long, Person> cache = ignite.getOrCreateCache("personCache");
+//
+//            cache.query(new SqlFieldsQuery("INSERT INTO Person(_key, id, name, " +
+//                    "salary) values (1, 1, 'John', '1000'), (2, 2, 'Mary', '2000')"));
+//
+//            QueryCursor<List<?>> cursor = cache.query(new SqlQuery( "Person",
+//                    "select * from Person"));
+//
+//            System.out.println(cursor.getAll());
+//        }
 
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress("127.0.0.1", 10900));
         doHandshake(socket);
-        createCacheWithName(socket);
-        getCacheNames(socket);
-
+        //createCacheWithConfiguration(socket);
+        doQueryScan(socket);
     }
 
     private static void putBinaryType(Socket socket) throws  IOException {
@@ -153,29 +152,38 @@ public class ThinClientExample2 {
         System.out.println(s);
     }
 
-    private static void createCacheWithConfiguration(Socket socket) throws IOException {
-        System.out.println("OP_CACHE_CREATE_WITH_CONFIGURATION");
-
+    private static void doQueryScan(Socket socket) throws IOException {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Message length
-        writeIntLittleEndian(22, out);
+        writeIntLittleEndian(28, out);
 
-        // Op code = OP_CACHE_CREATE_WITH_CONFIGURATION
-        writeShortLittleEndian(1053, out);
+        // Op code = OP_QUERY_SCAN
+        writeShortLittleEndian(2000, out);
 
         // Request id (can be anything)
         long reqId = 1;
         writeLongLittleEndian(reqId, out);
 
-        // CacheAtomicityMode
-        writeIntLittleEndian(0, out);
+        // Cache id
+        String queryCacheName = "personCache";
+        int cacheId = queryCacheName.hashCode();
+        writeIntLittleEndian(cacheId, out);
 
-        // Backups
-        writeIntLittleEndian(2, out);
+        // Filter Object
+        writeIntLittleEndian(1000, out);
 
-        // CacheMode
-        writeIntLittleEndian(2, out);
+        // Filter Platform
+        writeByteLittleEndian(1, out);
+
+        // Cursor page size
+        writeIntLittleEndian(1, out);
+
+        // Partition to query
+        writeIntLittleEndian(-1, out);
+
+        // local flag
+        out.writeBoolean(false);
 
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
@@ -191,8 +199,11 @@ public class ThinClientExample2 {
         // Success
         int statusCode = readIntLittleEndian(in);
         System.out.println("status code: " + statusCode);
-    }
 
+        // Cursor id
+        long cursorId = readLongLittleEndian(in);
+        System.out.println("cursorId: " + cursorId);
+    }
 
     private static void doSQLQuery(Socket socket) throws IOException {
         String entityName = "Person";
@@ -451,6 +462,46 @@ public class ThinClientExample2 {
 
         boolean moreResults = readBooleanLittleEndian(in);
         System.out.println("moreResults: " + moreResults);
+    }
+
+    private static void createCacheWithConfiguration(Socket socket) throws IOException {
+        System.out.println("OP_CACHE_CREATE_WITH_CONFIGURATION");
+
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+        // Message length
+        writeIntLittleEndian(22, out);
+
+        // Op code = OP_CACHE_CREATE_WITH_CONFIGURATION
+        writeShortLittleEndian(1053, out);
+
+        // Request id (can be anything)
+        long reqId = 1;
+        writeLongLittleEndian(reqId, out);
+
+        // CacheAtomicityMode
+        writeIntLittleEndian(0, out);
+
+        // Backups
+        writeIntLittleEndian(2, out);
+
+        // CacheMode
+        writeIntLittleEndian(2, out);
+
+        // Read result
+        DataInputStream in = new DataInputStream(socket.getInputStream());
+
+        // Response length
+        final int len = readIntLittleEndian(in);
+        System.out.println("len: " + len);
+
+        // Request id
+        long resReqId = readLongLittleEndian(in);
+        System.out.println("resReqId: " + resReqId);
+
+        // Success
+        int statusCode = readIntLittleEndian(in);
+        System.out.println("status code: " + statusCode);
     }
 
     private static void getCacheNames(Socket socket) throws IOException {
