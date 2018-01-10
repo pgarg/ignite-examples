@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7ff02f69-95dc-46c2-bec5-441fe2b7e6d5" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/ignite/myexamples/thinclient/ThinClientExample2.java" afterPath="$PROJECT_DIR$/src/main/java/ignite/myexamples/thinclient/ThinClientExample2.java" />
-    </list>
+    <list default="true" id="7ff02f69-95dc-46c2-bec5-441fe2b7e6d5" name="Default" comment="" />
     <ignored path="myexamples.iws" />
     <ignored path=".idea/workspace.xml" />
     <ignored path="$PROJECT_DIR$/out/" />
