@@ -23,53 +23,164 @@ import java.util.List;
 public class ThinClientExample2 {
     private static final String cacheName = "myCache";
 
+        /* General-purpose operations. */
+    /** */
+    private static final short OP_RESOURCE_CLOSE = 0;
+
+    /* Cache operations */
+    /** */
+    private static final short OP_CACHE_GET = 1000;
+
+    /** */
+    private static final short OP_CACHE_PUT = 1001;
+
+    /** */
+    private static final short OP_CACHE_PUT_IF_ABSENT = 1002;
+
+    /** */
+    private static final short OP_CACHE_GET_ALL = 1003;
+
+    /** */
+    private static final short OP_CACHE_PUT_ALL = 1004;
+
+    /** */
+    private static final short OP_CACHE_GET_AND_PUT = 1005;
+
+    /** */
+    private static final short OP_CACHE_GET_AND_REPLACE = 1006;
+
+    /** */
+    private static final short OP_CACHE_GET_AND_REMOVE = 1007;
+
+    /** */
+    private static final short OP_CACHE_GET_AND_PUT_IF_ABSENT = 1008;
+
+    /** */
+    private static final short OP_CACHE_REPLACE = 1009;
+
+    /** */
+    private static final short OP_CACHE_REPLACE_IF_EQUALS = 1010;
+
+    /** */
+    private static final short OP_CACHE_CONTAINS_KEY = 1011;
+
+    /** */
+    private static final short OP_CACHE_CONTAINS_KEYS = 1012;
+
+    /** */
+    private static final short OP_CACHE_CLEAR = 1013;
+
+    /** */
+    private static final short OP_CACHE_CLEAR_KEY = 1014;
+
+    /** */
+    private static final short OP_CACHE_CLEAR_KEYS = 1015;
+
+    /** */
+    private static final short OP_CACHE_REMOVE_KEY = 1016;
+
+    /** */
+    private static final short OP_CACHE_REMOVE_IF_EQUALS = 1017;
+
+    /** */
+    private static final short OP_CACHE_REMOVE_KEYS = 1018;
+
+    /** */
+    private static final short OP_CACHE_REMOVE_ALL = 1019;
+
+    /** */
+    private static final short OP_CACHE_GET_SIZE = 1020;
+
+    /* Cache create / destroy, configuration. */
+    /** */
+    private static final short OP_CACHE_GET_NAMES = 1050;
+
+    /** */
+    private static final short OP_CACHE_CREATE_WITH_NAME = 1051;
+
+    /** */
+    private static final short OP_CACHE_GET_OR_CREATE_WITH_NAME = 1052;
+
+    /** */
+    private static final short OP_CACHE_CREATE_WITH_CONFIGURATION = 1053;
+
+    /** */
+    private static final short OP_CACHE_GET_OR_CREATE_WITH_CONFIGURATION = 1054;
+
+    /** */
+    private static final short OP_CACHE_GET_CONFIGURATION = 1055;
+
+    /** */
+    private static final short OP_CACHE_DESTROY = 1056;
+
+    /* Query operations. */
+    /** */
+    private static final short OP_QUERY_SCAN = 2000;
+
+    /** */
+    private static final short OP_QUERY_SCAN_CURSOR_GET_PAGE = 2001;
+
+    /** */
+    private static final short OP_QUERY_SQL = 2002;
+
+    /** */
+    private static final short OP_QUERY_SQL_CURSOR_GET_PAGE = 2003;
+
+    /** */
+    private static final short OP_QUERY_SQL_FIELDS = 2004;
+
+    /** */
+    private static final short OP_QUERY_SQL_FIELDS_CURSOR_GET_PAGE = 2005;
+
+    /* Binary metadata operations. */
+    /** */
+    private static final short OP_BINARY_TYPE_NAME_GET = 3000;
+
+    /** */
+    private static final short OP_BINARY_TYPE_NAME_PUT = 3001;
+
+    /** */
+    private static final short OP_BINARY_TYPE_GET = 3002;
+
+    /** */
+    private static final short OP_BINARY_TYPE_PUT = 3003;
+
+
     public static void main(String[] args) throws IOException, IgniteCheckedException {
-        Ignition.setClientMode(true);
-
-        try (Ignite ignite = Ignition.start("/Users/prachig/myexamples/config/cluster-config.xml")) {
-            IgniteCache<Long, Person> cache = ignite.getOrCreateCache("personCache");
-
-            cache.query(new SqlFieldsQuery("INSERT INTO Person(_key, id, name, " +
-                    "salary) values (1, 1, 'John', '1000'), (2, 2, 'Mary', '2000')"));
-
-            QueryCursor<List<?>> cursor = cache.query(new SqlQuery( "Person",
-                    "select * from Person"));
-
-            System.out.println(cursor.getAll());
-        }
+//        Ignition.setClientMode(true);
+//
+//        try (Ignite ignite = Ignition.start("/Users/prachig/myexamples/config/cluster-config.xml")) {
+//            IgniteCache<Long, Person> cache = ignite.getOrCreateCache("personCache");
+//
+//            cache.query(new SqlFieldsQuery("INSERT INTO Person(_key, id, name, " +
+//                    "salary) values (1, 1, 'John', '1000'), (2, 2, 'Mary', '2000')"));
+//
+//            QueryCursor<List<?>> cursor = cache.query(new SqlQuery( "Person",
+//                    "select * from Person"));
+//
+//            System.out.println(cursor.getAll());
+//        }
 
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress("127.0.0.1", 10900));
         doHandshake(socket);
-        //createCacheWithConfiguration(socket);
-        querySqlFields(socket);
+        cachePut(socket, 1, 11);
+        cacheGet(socket, 1);
     }
 
     private static void putBinaryType(Socket socket) throws  IOException {
-        System.out.println("OP_PUT_BINARY_TYPE");
-
         String type = "ignite.myexamples.model.Person";
-        int typeLen = type.getBytes("UTF-8").length;
 
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(15, out);
-
-        // Op code = OP_GET_BINARY_TYPE
-        writeShortLittleEndian(3003, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        // Request Header
+        requestHeader(15, OP_BINARY_TYPE_PUT, 1, out);
 
         // Type id
         writeIntLittleEndian(type.hashCode(), out);
 
         // Type name
-        writeByteLittleEndian(9, out);
-        writeIntLittleEndian(typeLen, out);
-        out.writeBytes(type);
+        writeString(type, out);
 
         // Affinity key field name
         writeByteLittleEndian(101, out);
@@ -79,31 +190,19 @@ public class ThinClientExample2 {
 
         // Field 1
         String field1 = "id";
-        int field1Len = field1.getBytes("UTF-8").length;
-        writeByteLittleEndian(9, out);
-        writeIntLittleEndian(field1Len, out);
-        out.writeBytes(field1);
-
+        writeString(field1, out);
         writeIntLittleEndian("long".hashCode(), out);
         writeIntLittleEndian(field1.hashCode(), out);
 
         // Field 2
         String field2 = "name";
-        int field2Len = field1.getBytes("UTF-8").length;
-        writeByteLittleEndian(9, out);
-        writeIntLittleEndian(field2Len, out);
-        out.writeBytes(field2);
-
+        writeString(field2, out);
         writeIntLittleEndian("String".hashCode(), out);
         writeIntLittleEndian(field2.hashCode(), out);
 
         // Field 3
         String field3 = "salary";
-        int field3Len = field1.getBytes("UTF-8").length;
-        writeByteLittleEndian(9, out);
-        writeIntLittleEndian(field3Len, out);
-        out.writeBytes(field3);
-
+        writeString(field3, out);
         writeIntLittleEndian("int".hashCode(), out);
         writeIntLittleEndian(field3.hashCode(), out);
 
@@ -125,17 +224,7 @@ public class ThinClientExample2 {
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // Response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        responseHeader(in);
 
         int typeCode = readByteLittleEndian(in); // type code
         System.out.println("type code: " + typeCode);
@@ -155,20 +244,12 @@ public class ThinClientExample2 {
     private static void doQueryScan(Socket socket) throws IOException {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(28, out);
-
-        // Op code = OP_QUERY_SCAN
-        writeShortLittleEndian(2000, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        // Request header
+        requestHeader(18, OP_QUERY_SCAN, 1, out);
 
         // Cache id
         String queryCacheName = "personCache";
-        int cacheId = queryCacheName.hashCode();
-        writeIntLittleEndian(cacheId, out);
+        writeIntLittleEndian(queryCacheName.hashCode(), out);
 
         // Filter Object
         writeIntLittleEndian(1000, out);
@@ -188,17 +269,8 @@ public class ThinClientExample2 {
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // Response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        //Response header
+        responseHeader(in);
 
         // Cursor id
         long cursorId = readLongLittleEndian(in);
@@ -207,40 +279,28 @@ public class ThinClientExample2 {
 
     private static void doSQLQuery(Socket socket) throws IOException {
         String entityName = "Person";
-        int entityNameLength = entityName.getBytes("UTF-8").length;
+        int entityNameLength = getStrLen(entityName);
 
         String sql = "Select * from Person";
-        int sqlLength = sql.getBytes("UTF-8").length;
+        int sqlLength = getStrLen(sql);
 
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(44 + entityNameLength + sqlLength, out);
-
-        // Op code = OP_QUERY_SQL
-        writeShortLittleEndian(2002, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        // Request header
+        requestHeader(34 + entityNameLength + sqlLength, OP_QUERY_SQL, 1, out);
 
         // Cache id
         String queryCacheName = "personCache";
-        int cacheId = queryCacheName.hashCode();
-        writeIntLittleEndian(cacheId, out);
+        writeIntLittleEndian(queryCacheName.hashCode(), out);
 
         // Flag = none
         writeByteLittleEndian(0, out);
 
         // Query Entity
-        writeByteLittleEndian(9, out);
-        writeIntLittleEndian(entityNameLength, out);
-        out.writeBytes(entityName);
+        writeString(entityName, out);
 
         // SQL query
-        writeByteLittleEndian(9, out);
-        writeIntLittleEndian(sqlLength, out);
-        out.writeBytes(sql);
+        writeString(sql, out);
 
         // Argument count
         writeIntLittleEndian(0, out);
@@ -266,17 +326,8 @@ public class ThinClientExample2 {
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // Response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        // Response header
+        responseHeader(in);
 
         long cursorId = readLongLittleEndian(in);
         System.out.println("cursorId: " + cursorId);
@@ -287,13 +338,12 @@ public class ThinClientExample2 {
         // Read entries (as user objects)
         for (int i = 0; i < rowCount; i++) {
             int resTypeCode1 = readByteLittleEndian(in);
-            System.out.println(resTypeCode1);
             System.out.println(readLongLittleEndian(in));
 
             int resTypeCode2 = readByteLittleEndian(in);
             System.out.println(resTypeCode2);
 
-            // read value
+            // read value based on resTypeCode2
         }
 
         boolean moreResults = readBooleanLittleEndian(in);
@@ -306,94 +356,68 @@ public class ThinClientExample2 {
 
     private static void querySqlFields(Socket socket) throws IOException {
         String sql = "Select id, salary from Person";
-        int sqlLength = sql.getBytes("UTF-8").length;
 
         String sqlSchema = "personCache";
-        int sqlSchemaLength = sqlSchema.getBytes("UTF-8").length;
 
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(53 + sqlLength + sqlSchemaLength, out);
-
-        // Op code = OP_QUERY_SQL_FIELDS
-        writeShortLittleEndian(2004, out); //2
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);//8
+        // Request header
+        requestHeader(43 + getStrLen(sql) + getStrLen(sqlSchema), OP_QUERY_SQL_FIELDS, 1, out);
 
         // Cache id
         String queryCacheName = "personCache";
-        int cacheId = queryCacheName.hashCode();
-        writeIntLittleEndian(cacheId, out);//4
+        writeIntLittleEndian(queryCacheName.hashCode(), out);
 
         // Flag = none
-        writeByteLittleEndian(0, out);//1
+        writeByteLittleEndian(0, out);
 
         // Schema
-        writeByteLittleEndian(9, out);//1
-        writeIntLittleEndian(sqlSchemaLength, out);//4
-        out.writeBytes(sqlSchema); //sqlSchemaLength
+        writeString(sqlSchema, out);
 
         // cursor page size
-        writeIntLittleEndian(2, out);//4
+        writeIntLittleEndian(2, out);
 
         // Max Rows
-        writeIntLittleEndian(5, out);//4
+        writeIntLittleEndian(5, out);
 
         // SQL query
-        writeByteLittleEndian(9, out);//1
-        writeIntLittleEndian(sqlLength, out);//4
-        out.writeBytes(sql);//sqlLength
+        writeString(sql, out);
 
         // Argument count
-        writeIntLittleEndian(0, out);//4
+        writeIntLittleEndian(0, out);
 
         // Statement type
-        writeByteLittleEndian(1, out);//1
+        writeByteLittleEndian(1, out);
 
         // Joins
-        out.writeBoolean(false);//1
+        out.writeBoolean(false);
 
         // Local query
-        out.writeBoolean(false);//1
+        out.writeBoolean(false);
 
         // Replicated
-        out.writeBoolean(false);//1
+        out.writeBoolean(false);
 
         // Enforce join order
-        out.writeBoolean(false);//1
+        out.writeBoolean(false);
 
         // collocated
-        out.writeBoolean(false);//1
+        out.writeBoolean(false);
 
         // Lazy
-        out.writeBoolean(false);//1
+        out.writeBoolean(false);
 
         // Timeout
-        writeLongLittleEndian(5000, out);//8
+        writeLongLittleEndian(5000, out);
 
         // Replicated
-        out.writeBoolean(false);//1
-
-        // Send request
-        //out.flush();
+        out.writeBoolean(false);
 
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // Response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        // Response header
+        responseHeader(in);
 
         long cursorId = readLongLittleEndian(in);
         System.out.println("cursorId: " + cursorId);
@@ -418,18 +442,10 @@ public class ThinClientExample2 {
     }
 
     private static void getQueryCursorPage(Socket socket, long cursorId) throws IOException {
-
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(18, out);
-
-        // Op code = QUERY_SQL_CURSOR_GET_PAGE
-        writeShortLittleEndian(2003, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        // Request header
+        requestHeader(8, OP_QUERY_SQL_CURSOR_GET_PAGE, 1, out);
 
         // Cursor Id
         writeLongLittleEndian(cursorId, out);
@@ -440,17 +456,8 @@ public class ThinClientExample2 {
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // Response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        // Response header
+        responseHeader(in);
 
         int rowCount = readIntLittleEndian(in);
         System.out.println("rowCount: " + rowCount);
@@ -465,19 +472,9 @@ public class ThinClientExample2 {
     }
 
     private static void createCacheWithConfiguration(Socket socket) throws IOException {
-        System.out.println("OP_CACHE_CREATE_WITH_CONFIGURATION");
-
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(22, out);
-
-        // Op code = OP_CACHE_CREATE_WITH_CONFIGURATION
-        writeShortLittleEndian(1053, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        requestHeader(12, OP_CACHE_CREATE_WITH_CONFIGURATION, 1, out);
 
         // CacheAtomicityMode
         writeIntLittleEndian(0, out);
@@ -491,51 +488,21 @@ public class ThinClientExample2 {
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // Response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        // Response header
+        responseHeader(in);
     }
 
     private static void getCacheNames(Socket socket) throws IOException {
-        System.out.println("OP_CACHE_GET_NAMES");
-
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(10, out);
-
-        // Op code = OP_CACHE_GET_NAMES
-        writeShortLittleEndian(1050, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
-
-        // Send request
-        out.flush();
+        // Request header
+        requestHeader(0, OP_CACHE_GET_NAMES, 1, out);
 
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // Response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        // Response header
+        responseHeader(in);
 
         // Cache count
         int cacheCount = readIntLittleEndian(in);
@@ -543,75 +510,34 @@ public class ThinClientExample2 {
 
         // Cache names
         for (int i = 0; i < cacheCount; i++) {
-            int type = readByteLittleEndian(in); // type code
-            System.out.println("type: " + type);
-
-            int strLen = readIntLittleEndian(in); // length
-            System.out.println("strlen: " + strLen);
-
-            byte[] buf = new byte[strLen];
-
-            readFully(in, buf, 0, strLen);
-
-            String s = new String(buf); // cache name
-
-            System.out.println(s);
+           readString(in);
         }
     }
 
     private static void createCacheWithName(Socket socket) throws IOException {
         String cacheName = "myNewCache";
 
-        int nameLength = cacheName.getBytes("UTF-8").length;
-
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(15 + nameLength, out);
-
-        // Op code = OP_CACHE_CREATE_WITH_NAME
-        writeShortLittleEndian(1051, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        // Request header
+        requestHeader(5, OP_CACHE_CREATE_WITH_NAME, 1, out);
 
         // Cache name
-        writeByteLittleEndian(9, out); // String type code
-        writeIntLittleEndian(nameLength, out); // Cache name length
-        out.writeBytes(cacheName);
-
-        // Send request
-        out.flush();
+        writeString(cacheName, out);
 
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // Response length
-        final int len = readIntLittleEndian(in);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-
-        // Success code
-        int statusCode = readIntLittleEndian(in);
+        // Response header
+        responseHeader(in);
     }
 
 
     private static void cacheContainsKeys(Socket socket, int[] key) throws IOException{
-        System.out.println("cacheContainsKey");
-
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(29, out);
-
-        // Op code = OP_CACHE_CONTAINS_KEYS
-        writeShortLittleEndian(1012, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        // Request header
+        requestHeader(19, OP_CACHE_CONTAINS_KEYS, 1, out);
 
         // Cache id
         writeIntLittleEndian(cacheName.hashCode(), out);
@@ -630,82 +556,21 @@ public class ThinClientExample2 {
         writeByteLittleEndian(3, out);  // Integer type code
         writeIntLittleEndian(key[1], out);   // Cache key
 
-        // send request
-        out.flush();
-
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        // Response header
+        responseHeader(in);
 
         boolean res = readBooleanLittleEndian(in);
         System.out.printf("contains key: " + res);
     }
 
-    private static void cacheClear(Socket socket) throws IOException {
-        System.out.println("OP_CACHE_CLEAR");
-
-        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
-        // Message length
-        writeIntLittleEndian(15, out);
-
-        // Op code = OP_CACHE_CLEAR
-        writeShortLittleEndian(1013, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
-
-        // Cache id
-        writeIntLittleEndian(cacheName.hashCode(), out);
-
-        // Flags = none
-        writeByteLittleEndian(0, out);
-
-        // Send request
-        out.flush();
-
-        // Read result
-        DataInputStream in = new DataInputStream(socket.getInputStream());
-
-        // Response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
-    }
-
     private static void cachePut(Socket socket, int key, int value) throws IOException {
-        System.out.println("Cache put");
-
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(25, out);
-
-        // Op code = OP_CACHE_PUT
-        writeShortLittleEndian(1001, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        // Request header
+        requestHeader(15, OP_CACHE_PUT, 1, out);
 
         // Cache id
         writeIntLittleEndian(cacheName.hashCode(), out);
@@ -726,33 +591,15 @@ public class ThinClientExample2 {
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        // Response header
+        responseHeader(in);
     }
 
     private static void cachePutAll(Socket socket, int[] keys, int[] values) throws IOException {
-        System.out.println("Cache put all");
-
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(39, out);
-
-        // Op code = OP_CACHE_PUT_ALL
-        writeShortLittleEndian(1004, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        // Request header
+        requestHeader(29, OP_CACHE_PUT_ALL, 1, out);
 
         // Cache id
         writeIntLittleEndian(cacheName.hashCode(), out);
@@ -783,34 +630,15 @@ public class ThinClientExample2 {
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // response length
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        // Response header
+        responseHeader(in);
     }
 
     private static void cacheGet(Socket socket, int key) throws IOException {
-        System.out.println("Cache Get");
-
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Perform OP_CACHE_GET
-        // Message length
-        writeIntLittleEndian(20, out);
-
-        // Op code = OP_CACHE_GET
-        writeShortLittleEndian(1000, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        // Request header
+        requestHeader(10, OP_CACHE_GET, 1, out);
 
         // Cache id
         writeIntLittleEndian(cacheName.hashCode(), out);
@@ -828,17 +656,8 @@ public class ThinClientExample2 {
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        // requestId (8) + status code (4) + int object (1 + 4)
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        // Response header
+        responseHeader(in);
 
         // Integer
         int resTypeCode = readByteLittleEndian(in);
@@ -850,19 +669,10 @@ public class ThinClientExample2 {
     }
 
     private static void cacheGetALL(Socket socket, int[] keys) throws IOException {
-        System.out.println("Cache Get ALL");
-
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Message length
-        writeIntLittleEndian(29, out);
-
-        // Op code = OP_CACHE_GETALL
-        writeShortLittleEndian(1003, out);
-
-        // Request id (can be anything)
-        long reqId = 1;
-        writeLongLittleEndian(reqId, out);
+        // Request header
+        requestHeader(19, OP_CACHE_GET_ALL, 1, out);
 
         // Cache id
         writeIntLittleEndian(cacheName.hashCode(), out);
@@ -887,16 +697,8 @@ public class ThinClientExample2 {
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        final int len = readIntLittleEndian(in);
-        System.out.println("len: " + len);
-
-        // Request id
-        long resReqId = readLongLittleEndian(in);
-        System.out.println("resReqId: " + resReqId);
-
-        // Success
-        int statusCode = readIntLittleEndian(in);
-        System.out.println("status code: " + statusCode);
+        // Response header
+        responseHeader(in);
 
         // Result count
         int resCount = readIntLittleEndian(in);
@@ -907,7 +709,7 @@ public class ThinClientExample2 {
             int resKeyTypeCode = readByteLittleEndian(in);
             System.out.println("resKeyTypeCode" + i + ": "  + resKeyTypeCode);
 
-            // Resulting cache value
+            // Resulting key
             int resKey = readIntLittleEndian(in);
             System.out.println("resKey" + i + ": " + resKey);
 
@@ -987,6 +789,19 @@ public class ThinClientExample2 {
         out.writeBytes(v);
     }
 
+    private static void writeString (String str, DataOutputStream out) throws IOException {
+        writeByteLittleEndian(9, out); // Type code for String
+
+        int strLen = getStrLen(str); // Length of the string
+        writeIntLittleEndian(strLen, out);
+
+        out.writeBytes(str);
+    }
+
+    private static int getStrLen(String str) throws UnsupportedEncodingException {
+        return str.getBytes("UTF-8").length;
+    }
+
     private static int readIntLittleEndian(DataInputStream in) throws IOException {
         int ch1 = in.read();
         int ch2 = in.read();
@@ -1037,5 +852,44 @@ public class ThinClientExample2 {
 
     private static boolean readBooleanLittleEndian(DataInputStream in) throws IOException {
         return in.readBoolean();
+    }
+
+    private static void readString(DataInputStream in) throws IOException {
+        int type = readByteLittleEndian(in); // type code
+
+        int strLen = readIntLittleEndian(in); // length
+
+        byte[] buf = new byte[strLen];
+
+        readFully(in, buf, 0, strLen);
+
+        String s = new String(buf); // cache name
+
+        System.out.println(s);
+    }
+
+    private static void requestHeader(int reqLength, int opCode, int reqId, DataOutputStream out) throws IOException {
+        // Message length
+        writeIntLittleEndian(10 + reqLength, out);
+
+        // Op code
+        writeShortLittleEndian(opCode, out);
+
+        // Request id
+        writeLongLittleEndian(reqId, out);
+    }
+
+    private static void responseHeader(DataInputStream in) throws IOException {
+        // Response length
+        final int len = readIntLittleEndian(in);
+        System.out.println("len: " + len);
+
+        // Request id
+        long resReqId = readLongLittleEndian(in);
+        System.out.println("resReqId: " + resReqId);
+
+        // Success
+        int statusCode = readIntLittleEndian(in);
+        System.out.println("status code: " + statusCode);
     }
 }
