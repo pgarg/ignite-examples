@@ -173,8 +173,8 @@ public class ThinClientExample2 {
 
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        // Request Header
-        requestHeader(15, OP_BINARY_TYPE_PUT, 1, out);
+        // Request header
+        requestHeader(45, OP_BINARY_TYPE_PUT, 1, out);
 
         // Type id
         writeIntLittleEndian(type.hashCode(), out);
@@ -854,7 +854,7 @@ public class ThinClientExample2 {
         System.out.println(s);
     }
 
-    private static void requestHeader(int reqLength, int opCode, int reqId, DataOutputStream out) throws IOException {
+    private static void requestHeader(int reqLength, short opCode, long reqId, DataOutputStream out) throws IOException {
         // Message length
         writeIntLittleEndian(10 + reqLength, out);
 
