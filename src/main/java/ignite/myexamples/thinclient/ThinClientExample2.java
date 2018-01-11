@@ -225,20 +225,6 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         responseHeader(in);
-
-        int typeCode = readByteLittleEndian(in); // type code
-        System.out.println("type code: " + typeCode);
-
-        int strLen = readIntLittleEndian(in); // length
-        System.out.println("strlen: " + strLen);
-
-        byte[] buf = new byte[strLen];
-
-        readFully(in, buf, 0, strLen);
-
-        String s = new String(buf);
-
-        System.out.println(s);
     }
 
     private static void doQueryScan(Socket socket) throws IOException {
