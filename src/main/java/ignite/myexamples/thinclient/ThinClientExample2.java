@@ -1,23 +1,10 @@
 package ignite.myexamples.thinclient;
 
-import ignite.myexamples.model.Person;
-import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
 import org.apache.ignite.IgniteCheckedException;
-import org.apache.ignite.Ignition;
-import org.apache.ignite.cache.query.QueryCursor;
-import org.apache.ignite.cache.query.SqlFieldsQuery;
-import org.apache.ignite.cache.query.SqlQuery;
 
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.List;
 
 
 public class ThinClientExample2 {
@@ -174,7 +161,7 @@ public class ThinClientExample2 {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(45, OP_BINARY_TYPE_PUT, 1, out);
+        writeRequestHeader(45, OP_BINARY_TYPE_PUT, 1, out);
 
         // Type id
         writeIntLittleEndian(type.hashCode(), out);
@@ -224,14 +211,14 @@ public class ThinClientExample2 {
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
-        responseHeader(in);
+        readResponseHeader(in);
     }
 
     private static void doQueryScan(Socket socket) throws IOException {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(18, OP_QUERY_SCAN, 1, out);
+        writeRequestHeader(18, OP_QUERY_SCAN, 1, out);
 
         // Cache id
         String queryCacheName = "personCache";
@@ -256,7 +243,7 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         //Response header
-        responseHeader(in);
+        readResponseHeader(in);
 
         // Cursor id
         long cursorId = readLongLittleEndian(in);
@@ -273,7 +260,7 @@ public class ThinClientExample2 {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(34 + entityNameLength + sqlLength, OP_QUERY_SQL, 1, out);
+        writeRequestHeader(34 + entityNameLength + sqlLength, OP_QUERY_SQL, 1, out);
 
         // Cache id
         String queryCacheName = "personCache";
@@ -313,7 +300,7 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
 
         long cursorId = readLongLittleEndian(in);
         System.out.println("cursorId: " + cursorId);
@@ -348,7 +335,7 @@ public class ThinClientExample2 {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(43 + getStrLen(sql) + getStrLen(sqlSchema), OP_QUERY_SQL_FIELDS, 1, out);
+        writeRequestHeader(43 + getStrLen(sql) + getStrLen(sqlSchema), OP_QUERY_SQL_FIELDS, 1, out);
 
         // Cache id
         String queryCacheName = "personCache";
@@ -403,7 +390,7 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
 
         long cursorId = readLongLittleEndian(in);
         System.out.println("cursorId: " + cursorId);
@@ -431,7 +418,7 @@ public class ThinClientExample2 {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(8, OP_QUERY_SQL_CURSOR_GET_PAGE, 1, out);
+        writeRequestHeader(8, OP_QUERY_SQL_CURSOR_GET_PAGE, 1, out);
 
         // Cursor Id
         writeLongLittleEndian(cursorId, out);
@@ -443,7 +430,7 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
 
         int rowCount = readIntLittleEndian(in);
         System.out.println("rowCount: " + rowCount);
@@ -460,7 +447,7 @@ public class ThinClientExample2 {
     private static void createCacheWithConfiguration(Socket socket) throws IOException {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-        requestHeader(12, OP_CACHE_CREATE_WITH_CONFIGURATION, 1, out);
+        writeRequestHeader(12, OP_CACHE_CREATE_WITH_CONFIGURATION, 1, out);
 
         // CacheAtomicityMode
         writeIntLittleEndian(0, out);
@@ -475,20 +462,20 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
     }
 
     private static void getCacheNames(Socket socket) throws IOException {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(0, OP_CACHE_GET_NAMES, 1, out);
+        writeRequestHeader(0, OP_CACHE_GET_NAMES, 1, out);
 
         // Read result
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
 
         // Cache count
         int cacheCount = readIntLittleEndian(in);
@@ -506,7 +493,7 @@ public class ThinClientExample2 {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(5, OP_CACHE_CREATE_WITH_NAME, 1, out);
+        writeRequestHeader(5, OP_CACHE_CREATE_WITH_NAME, 1, out);
 
         // Cache name
         writeString(cacheName, out);
@@ -515,7 +502,7 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
     }
 
 
@@ -523,7 +510,7 @@ public class ThinClientExample2 {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(19, OP_CACHE_CONTAINS_KEYS, 1, out);
+        writeRequestHeader(19, OP_CACHE_CONTAINS_KEYS, 1, out);
 
         // Cache id
         writeIntLittleEndian(cacheName.hashCode(), out);
@@ -546,7 +533,7 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
 
         boolean res = readBooleanLittleEndian(in);
         System.out.printf("contains key: " + res);
@@ -556,7 +543,7 @@ public class ThinClientExample2 {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(15, OP_CACHE_PUT, 1, out);
+        writeRequestHeader(15, OP_CACHE_PUT, 1, out);
 
         // Cache id
         writeIntLittleEndian(cacheName.hashCode(), out);
@@ -578,14 +565,14 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
     }
 
     private static void cachePutAll(Socket socket, int[] keys, int[] values) throws IOException {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(29, OP_CACHE_PUT_ALL, 1, out);
+        writeRequestHeader(29, OP_CACHE_PUT_ALL, 1, out);
 
         // Cache id
         writeIntLittleEndian(cacheName.hashCode(), out);
@@ -617,14 +604,14 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
     }
 
     private static void cacheGet(Socket socket, int key) throws IOException {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(10, OP_CACHE_GET, 1, out);
+        writeRequestHeader(10, OP_CACHE_GET, 1, out);
 
         // Cache id
         writeIntLittleEndian(cacheName.hashCode(), out);
@@ -643,7 +630,7 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
 
         // Integer
         int resTypeCode = readByteLittleEndian(in);
@@ -658,7 +645,7 @@ public class ThinClientExample2 {
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         // Request header
-        requestHeader(19, OP_CACHE_GET_ALL, 1, out);
+        writeRequestHeader(19, OP_CACHE_GET_ALL, 1, out);
 
         // Cache id
         writeIntLittleEndian(cacheName.hashCode(), out);
@@ -684,7 +671,7 @@ public class ThinClientExample2 {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         // Response header
-        responseHeader(in);
+        readResponseHeader(in);
 
         // Result count
         int resCount = readIntLittleEndian(in);
@@ -854,7 +841,7 @@ public class ThinClientExample2 {
         System.out.println(s);
     }
 
-    private static void requestHeader(int reqLength, short opCode, long reqId, DataOutputStream out) throws IOException {
+    private static void writeRequestHeader(int reqLength, short opCode, long reqId, DataOutputStream out) throws IOException {
         // Message length
         writeIntLittleEndian(10 + reqLength, out);
 
@@ -865,7 +852,7 @@ public class ThinClientExample2 {
         writeLongLittleEndian(reqId, out);
     }
 
-    private static void responseHeader(DataInputStream in) throws IOException {
+    private static void readResponseHeader(DataInputStream in) throws IOException {
         // Response length
         final int len = readIntLittleEndian(in);
         System.out.println("len: " + len);
